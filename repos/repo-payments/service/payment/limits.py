@@ -1,5 +1,5 @@
-# Missing 'premium' tier. This is what breaks refunds.
+# Fixed: Added missing 'premium' tier
 LIMITS = {
-    'standard': {'max': 1000}
-    # BUG: 'premium' missing
+    'standard': {'max': 1000},
+    'premium': {'max': 5000}  # Added missing tier
 }
