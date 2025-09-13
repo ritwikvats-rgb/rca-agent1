@@ -1,0 +1,4 @@
+signature,repo,path_hint,notes
+CheckoutTimeoutError,repo-orders,src/orders/checkout.ts,SLA breach without guard
+RefundLimitExceededError,repo-payments,service/payment/handlers/refund.py,Missing tier config
+LoginRateLimitError,repo-auth,src/auth/login.py,Too many attempts

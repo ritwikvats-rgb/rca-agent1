@@ -1,0 +1,15 @@
+{
+  "id": "TCK-1001",
+  "title": "Checkout intermittently timing out",
+  "service": "orders-api",
+  "api_endpoint": "/v1/orders/checkout",
+  "job_id": "job-991",
+  "workflow_id": "flow-22",
+  "request_id": "req_9a8b",
+  "session_id": "sess_11",
+  "version": "2025.09.13",
+  "created_at": "2025-09-13T15:02:07Z",
+  "resolved_at": null,
+  "impact": "3% checkout failures (~₹40L/day est. loss)",
+  "error_message": "CheckoutTimeoutError: payment gateway exceeded 5s"
+}

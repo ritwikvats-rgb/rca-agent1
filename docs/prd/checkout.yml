@@ -1,0 +1,16 @@
+feature: Checkout v1
+goal: Users finish checkout within 5 seconds P95.
+business_rules:
+  - gateway_timeout_ms: 5000
+  - must_retry_on_timeout: true
+  - log_context: [request_id, user_id, amount]
+acceptance_criteria:
+  - timeout guard at 5s
+  - one retry on timeout
+  - clear error to UI; log context
+ownership:
+  team: @oncall-orders
+  code_paths:
+    - repo-orders/src/orders/checkout.ts
+metrics:
+  slo_p95_ms: 5000

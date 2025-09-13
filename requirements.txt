@@ -1,0 +1,7 @@
+pydantic>=2
+rich
+jinja2
+pyyaml
+python-dotenv
+requests
+reportlab

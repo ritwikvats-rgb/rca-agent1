@@ -1,0 +1,6 @@
+orders-api:
+  /v1/orders/checkout: src/orders/checkout.ts#checkout
+payments-api:
+  /v1/refunds: service/payment/handlers/refund.py#refund_handler
+auth-api:
+  /v1/login: src/auth/login.py#login

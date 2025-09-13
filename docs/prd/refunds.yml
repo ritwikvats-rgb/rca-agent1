@@ -1,0 +1,13 @@
+feature: Refunds v1
+goal: Refund limits enforced for all tiers.
+business_rules:
+  - required_tiers: [standard, premium]
+  - missing_tier_behavior: block_with_clear_error
+acceptance_criteria:
+  - safe lookups; no KeyError
+  - missing tier triggers explicit error + log
+ownership:
+  team: @oncall-payments
+  code_paths:
+    - repo-payments/service/payment/handlers/refund.py
+    - repo-payments/service/payment/limits.py

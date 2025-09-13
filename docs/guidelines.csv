@@ -1,0 +1,6 @@
+pattern,type,explanation,example_fix
+gateway exceeded 5s,business_logic,"Timeout SLA breach; add 5s guard and one retry","wrap call with 5s timer + retry"
+LIMITS\[.*\],business_logic,"Unsafe dict index can crash; enforce required tiers","use LIMITS.get(tier, default)"
+missing_log_context,code_quality,"No request_id/user_id/amount in error logs","log these fields on error"
+function_lines_gt_50,code_quality,"Long function; hard to test","split into smaller functions"
+bare except,code_quality,"Swallows errors","catch specific exceptions and log context"

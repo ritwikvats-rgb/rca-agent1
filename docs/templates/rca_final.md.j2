@@ -1,0 +1,25 @@
+# Final RCA — {{ incident.id }}: {{ incident.title }}
+
+## What was fixed
+
+**Commit:** {{ fix_commit }}
+
+**Files changed:** {{ files_changed }}
+
+**Summary:** {{ fix_summary }}
+
+## Updated Timeline
+
+- Created: {{ created_at }}
+- Resolved: {{ resolved_at }}
+- TAT: {{ tat }}
+
+## Post-Fix Checks
+{% for v in validations %}- {{ v }}
+{% endfor %}
+
+## Prevention (Committed/Planned)
+{% for p in prevention %}- {{ p }}
+{% endfor %}
+
+**Owners:** {{ owners }}

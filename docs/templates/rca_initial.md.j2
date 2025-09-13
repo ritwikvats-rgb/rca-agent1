@@ -1,0 +1,43 @@
+# Initial RCA — {{ incident.id }}: {{ incident.title }}
+
+## Summary
+{{ summary }}
+
+## Timeline
+- Created: {{ created_at }}
+- Resolved: {{ resolved_at or "—" }}
+- TAT: {{ tat or "—" }}
+
+## Impact
+- {{ impact }}
+
+## Suspect
+- Repo: {{ suspect.repo }}
+- File: {{ suspect.file }}
+- Reasons:
+{% for r in suspect.reasons %}- {{ r }}
+{% endfor %}
+
+## 5 Whys
+{% for w in whys %}{{ loop.index }}. {{ w }}
+{% endfor %}
+
+## Observations (Business Logic & Code Quality)
+{% for o in observations %}- {{ o.kind }} — {{ o.note }} (rule: {{ o.rule }})
+{% endfor %}
+
+## Candidate Fixes
+{% for d in diffs %}```diff
+{{ d }}
+```
+{% endfor %}
+
+## Validation Steps
+{% for v in validations %}- {{ v }}
+{% endfor %}
+
+## Prevention
+{% for p in prevention %}- {{ p }}
+{% endfor %}
+
+**Owners:** {{ owners }}

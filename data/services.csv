@@ -1,0 +1,4 @@
+service,repo,owners
+orders-api,repo-orders,@oncall-orders
+payments-api,repo-payments,@oncall-payments
+auth-api,repo-auth,@oncall-auth

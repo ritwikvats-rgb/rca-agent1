@@ -1,0 +1,2 @@
+service,release_tag,commits
+orders-api,2025.09.13,"{BUG_COMMIT};{BASE_COMMIT}"

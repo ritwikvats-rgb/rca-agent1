@@ -1,0 +1,23 @@
+# [RCA] {{ incident.id }} — {{ incident.title }}
+
+## Summary
+
+{{ summary }}
+
+## Proposed Fixes (sketches)
+
+{% for d in diffs %}```diff
+{{ d }}
+```
+
+{% endfor %}
+
+## Risks
+{% for r in risks %}- {{ r }}
+{% endfor %}
+
+## Tests / Validations
+{% for v in validations %}- {{ v }}
+{% endfor %}
+
+**Links:** Initial RCA, Ticket
