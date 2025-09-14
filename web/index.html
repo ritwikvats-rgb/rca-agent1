@@ -382,7 +382,10 @@ Click any button above to get started!
     </div>
 
     <script>
-        const API_BASE = 'http://127.0.0.1:8000';
+        // Auto-detect API base URL - use relative URLs for Vercel deployment
+        const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'http://127.0.0.1:8000' 
+            : '/api';
         let currentIncident = 'TCK-1001';
 
         // Initialize dashboard
