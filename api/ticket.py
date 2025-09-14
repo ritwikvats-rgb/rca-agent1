@@ -1,15 +1,31 @@
-from flask import Flask, jsonify, request
-import os
 import json
+import os
 
-app = Flask(__name__)
+def handler(request):
+    """Vercel serverless function handler"""
+    
+    # Parse the request
+    method = request.get('httpMethod', 'GET')
+    
+    if method == 'POST':
+        return create_ticket(request)
+    else:
+        return {
+            'statusCode': 405,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({'error': 'Method not allowed'})
+        }
 
-@app.route('/ticket', methods=['POST'])
-def create_ticket():
+def create_ticket(request):
     """Create Linear ticket - simplified version without external dependencies"""
     try:
         # Get request data
-        data = request.get_json() or {}
+        body = request.get('body', '{}')
+        if isinstance(body, str):
+            data = json.loads(body) if body else {}
+        else:
+            data = body
+            
         incident_file = data.get('incident_file', 'TCK-1001.json')
         team = data.get('team', 'RIT')
         
@@ -18,25 +34,33 @@ def create_ticket():
         
         if not linear_api_key:
             # No API key - return informative mock ticket
-            return jsonify({
-                "status": "success",
-                "ticket_id": "RIT-MOCK-001",
-                "ticket_url": "https://linear.app/ritwik-vats/issue/RIT-MOCK-001",
-                "type": "mock",
-                "message": "Mock ticket created - Add LINEAR_API_KEY to Vercel environment for real tickets"
-            })
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json'},
+                'body': json.dumps({
+                    "status": "success",
+                    "ticket_id": "RIT-MOCK-001",
+                    "ticket_url": "https://linear.app/ritwik-vats/issue/RIT-MOCK-001",
+                    "type": "mock",
+                    "message": "Mock ticket created - Add LINEAR_API_KEY to Vercel environment for real tickets"
+                })
+            }
         
         # Try to import requests - if it fails, return mock
         try:
             import requests
         except ImportError:
-            return jsonify({
-                "status": "success",
-                "ticket_id": "RIT-MOCK-002",
-                "ticket_url": "https://linear.app/ritwik-vats/issue/RIT-MOCK-002",
-                "type": "mock",
-                "message": "Mock ticket created - requests library not available in Vercel"
-            })
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json'},
+                'body': json.dumps({
+                    "status": "success",
+                    "ticket_id": "RIT-MOCK-002",
+                    "ticket_url": "https://linear.app/ritwik-vats/issue/RIT-MOCK-002",
+                    "type": "mock",
+                    "message": "Mock ticket created - requests library not available in Vercel"
+                })
+            }
         
         # Extract incident ID from request
         incident_id = incident_file.split('/')[-1].replace('.json', '') if '/' in incident_file else incident_file.replace('.json', '')
@@ -108,13 +132,17 @@ def create_ticket():
                 timeout=30  # Increased timeout for Vercel
             )
         except requests.exceptions.RequestException as e:
-            return jsonify({
-                "status": "success",
-                "ticket_id": "RIT-MOCK-006",
-                "ticket_url": "https://linear.app/ritwik-vats/issue/RIT-MOCK-006",
-                "type": "mock",
-                "message": f"Mock ticket created - Network error: {str(e)[:100]}"
-            })
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json'},
+                'body': json.dumps({
+                    "status": "success",
+                    "ticket_id": "RIT-MOCK-006",
+                    "ticket_url": "https://linear.app/ritwik-vats/issue/RIT-MOCK-006",
+                    "type": "mock",
+                    "message": f"Mock ticket created - Network error: {str(e)[:100]}"
+                })
+            }
         
         # Check response
         if response.status_code == 200:
@@ -123,44 +151,56 @@ def create_ticket():
             # Check for GraphQL errors
             if "errors" in result:
                 error_msg = result["errors"][0].get("message", "Unknown GraphQL error")
-                return jsonify({
-                    "status": "success",
-                    "ticket_id": "RIT-MOCK-003",
-                    "ticket_url": "https://linear.app/ritwik-vats/issue/RIT-MOCK-003",
-                    "type": "mock",
-                    "message": f"Mock ticket created - Linear API error: {error_msg}"
-                })
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json'},
+                    'body': json.dumps({
+                        "status": "success",
+                        "ticket_id": "RIT-MOCK-003",
+                        "ticket_url": "https://linear.app/ritwik-vats/issue/RIT-MOCK-003",
+                        "type": "mock",
+                        "message": f"Mock ticket created - Linear API error: {error_msg}"
+                    })
+                }
             
             # Check for successful issue creation
             if result.get("data", {}).get("issueCreate", {}).get("success"):
                 issue = result["data"]["issueCreate"]["issue"]
-                return jsonify({
-                    "status": "success",
-                    "ticket_id": issue["identifier"],
-                    "ticket_url": issue["url"],
-                    "type": "real",
-                    "message": f"✅ Created real Linear ticket {issue['identifier']}"
-                })
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json'},
+                    'body': json.dumps({
+                        "status": "success",
+                        "ticket_id": issue["identifier"],
+                        "ticket_url": issue["url"],
+                        "type": "real",
+                        "message": f"✅ Created real Linear ticket {issue['identifier']}"
+                    })
+                }
         
         # API call failed - return detailed mock
-        return jsonify({
-            "status": "success",
-            "ticket_id": "RIT-MOCK-004",
-            "ticket_url": "https://linear.app/ritwik-vats/issue/RIT-MOCK-004",
-            "type": "mock",
-            "message": f"Mock ticket created - Linear API returned {response.status_code}"
-        })
+        return {
+            'statusCode': 200,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({
+                "status": "success",
+                "ticket_id": "RIT-MOCK-004",
+                "ticket_url": "https://linear.app/ritwik-vats/issue/RIT-MOCK-004",
+                "type": "mock",
+                "message": f"Mock ticket created - Linear API returned {response.status_code}"
+            })
+        }
             
     except Exception as e:
         # Detailed error handling
-        return jsonify({
-            "status": "success",
-            "ticket_id": "RIT-MOCK-005",
-            "ticket_url": "https://linear.app/ritwik-vats/issue/RIT-MOCK-005",
-            "type": "mock",
-            "message": f"Mock ticket created - Exception: {str(e)[:100]}"
-        })
-
-# For Vercel
-def handler(request):
-    return app(request.environ, lambda status, headers: None)
+        return {
+            'statusCode': 200,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({
+                "status": "success",
+                "ticket_id": "RIT-MOCK-005",
+                "ticket_url": "https://linear.app/ritwik-vats/issue/RIT-MOCK-005",
+                "type": "mock",
+                "message": f"Mock ticket created - Exception: {str(e)[:100]}"
+            })
+        }
