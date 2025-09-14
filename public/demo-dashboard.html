@@ -1214,27 +1214,56 @@ This is demonstration content. The actual RCA Agent generates comprehensive, rea
             const compareBtn = document.getElementById('compareBtn');
             const ticketBtn = document.getElementById('ticketBtn');
 
+            // Debug logging to track state changes
+            console.log('🔍 Updating button states:', workflowState);
+
             // Reset all button states
             [triageBtn, initialRCABtn, applyFixBtn, finalRCABtn, compareBtn, ticketBtn].forEach(btn => {
                 btn.disabled = false;
                 btn.classList.remove('btn-completed');
             });
 
-            // Apply sequential logic
+            // Apply sequential logic - each step depends on the previous one
             triageBtn.disabled = false; // Always available
             initialRCABtn.disabled = !workflowState.triageCompleted;
             applyFixBtn.disabled = !workflowState.initialRCACompleted;
-            finalRCABtn.disabled = !workflowState.fixApplied;
+            finalRCABtn.disabled = !workflowState.fixApplied; // Only enabled after fix is applied
             compareBtn.disabled = !workflowState.finalRCACompleted;
             ticketBtn.disabled = !workflowState.finalRCACompleted;
 
-            // Mark completed steps
-            if (workflowState.triageCompleted) triageBtn.classList.add('btn-completed');
-            if (workflowState.initialRCACompleted) initialRCABtn.classList.add('btn-completed');
-            if (workflowState.fixApplied) applyFixBtn.classList.add('btn-completed');
-            if (workflowState.finalRCACompleted) finalRCABtn.classList.add('btn-completed');
-            if (workflowState.comparisonCompleted) compareBtn.classList.add('btn-completed');
-            if (workflowState.ticketCreated) ticketBtn.classList.add('btn-completed');
+            // Mark completed steps - ONLY mark as completed if the state is true
+            if (workflowState.triageCompleted === true) {
+                triageBtn.classList.add('btn-completed');
+                console.log('✅ Triage marked as completed');
+            }
+            if (workflowState.initialRCACompleted === true) {
+                initialRCABtn.classList.add('btn-completed');
+                console.log('✅ Initial RCA marked as completed');
+            }
+            if (workflowState.fixApplied === true) {
+                applyFixBtn.classList.add('btn-completed');
+                console.log('✅ Apply Fix marked as completed');
+            }
+            if (workflowState.finalRCACompleted === true) {
+                finalRCABtn.classList.add('btn-completed');
+                console.log('✅ Final RCA marked as completed');
+            }
+            if (workflowState.comparisonCompleted === true) {
+                compareBtn.classList.add('btn-completed');
+                console.log('✅ Comparison marked as completed');
+            }
+            if (workflowState.ticketCreated === true) {
+                ticketBtn.classList.add('btn-completed');
+                console.log('✅ Ticket marked as completed');
+            }
+
+            // Validate workflow state integrity
+            if (workflowState.finalRCACompleted && !workflowState.fixApplied) {
+                console.error('🚨 WORKFLOW STATE ERROR: Final RCA completed but fix not applied!');
+                workflowState.finalRCACompleted = false;
+                finalRCABtn.classList.remove('btn-completed');
+                appendOutput('⚠️ Workflow state corrected: Final RCA reset because fix was not applied');
+            }
         }
 
         function showWorkflowStatus(title, message) {
