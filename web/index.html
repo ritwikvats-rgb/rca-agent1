@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RCA Agent Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .status-bar {
+            background: #f8f9fa;
+            padding: 15px 30px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            border: 1px solid #e9ecef;
+        }
+
+        .panel h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-primary { background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); }
+        .btn-success { background: linear-gradient(135deg, #27ae60 0%, #229954 100%); }
+        .btn-warning { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); }
+        .btn-danger { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
+        .btn-info { background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); }
+        .btn-secondary { background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%); }
+
+        .btn-full {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+            font-size: 16px;
+            padding: 18px;
+        }
+
+        .output-panel {
+            grid-column: 1 / -1;
+        }
+
+        .output {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .artifacts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .artifact-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .artifact-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .artifact-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+
+        .artifact-meta {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        .artifact-download {
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: inline-block;
+            transition: background 0.3s ease;
+        }
+
+        .artifact-download:hover {
+            background: #218838;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #c3e6cb;
+        }
+
+        .incident-selector {
+            margin-bottom: 20px;
+        }
+
+        .incident-selector select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .button-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 RCA Agent Dashboard</h1>
+            <p>Automated Root Cause Analysis & Incident Response</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Connecting to API...</span>
+            </div>
+            <div>
+                <span id="lastUpdate">Never</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="panel">
+                <h2>🎯 Incident Operations</h2>
+                
+                <div class="incident-selector">
+                    <select id="incidentSelect">
+                        <option value="TCK-1001">TCK-1001 - Checkout intermittently timing out</option>
+                    </select>
+                </div>
+
+                <div class="button-grid">
+                    <button class="btn btn-primary" onclick="runTriage()">
+                        🔍 Triage
+                    </button>
+                    <button class="btn btn-info" onclick="generateInitialRCA()">
+                        📋 Initial RCA
+                    </button>
+                    <button class="btn btn-warning" onclick="applyFix()">
+                        🔧 Apply Fix
+                    </button>
+                    <button class="btn btn-success" onclick="generateFinalRCA()">
+                        ✅ Final RCA
+                    </button>
+                    <button class="btn btn-secondary" onclick="generateComparison()">
+                        📊 Compare
+                    </button>
+                    <button class="btn btn-info" onclick="createTicket()">
+                        🎫 Create Ticket
+                    </button>
+                </div>
+
+                <button class="btn btn-full" onclick="runFullDemo()">
+                    🚀 One-Click Demo Pipeline
+                </button>
+            </div>
+
+            <div class="panel">
+                <h2>📁 Artifacts & Downloads</h2>
+                <button class="btn btn-secondary" onclick="refreshArtifacts()" style="margin-bottom: 15px;">
+                    🔄 Refresh Artifacts
+                </button>
+                <div id="artifactsContainer">
+                    <p style="color: #6c757d; text-align: center; padding: 20px;">
+                        Click "Refresh Artifacts" to load available files
+                    </p>
+                </div>
+            </div>
+
+            <div class="panel output-panel">
+                <h2>📤 API Output</h2>
+                <div class="progress-bar" id="progressBar" style="display: none;">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="output" id="output">
+Welcome to RCA Agent Dashboard! 🎉
+
+Ready to analyze incidents and generate comprehensive RCA documents.
+
+Available operations:
+• Triage: Analyze incident and identify suspects
+• Initial RCA: Generate comprehensive analysis
+• Apply Fix: Implement code fixes automatically  
+• Final RCA: Document resolution and metrics
+• Compare: Show before/after code changes
+• Create Ticket: Generate Linear tickets
+• One-Click Demo: Run complete pipeline
+
+Click any button above to get started!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:8000';
+        let currentIncident = 'TCK-1001';
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAPIHealth();
+            loadIncidents();
+            refreshArtifacts();
+        });
+
+        async function checkAPIHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                if (data.status === 'healthy') {
+                    updateStatus('🟢 API Connected', 'success');
+                } else {
+                    updateStatus('🟡 API Issues', 'warning');
+                }
+            } catch (error) {
+                updateStatus('🔴 API Offline', 'error');
+                appendOutput(`❌ Failed to connect to API: ${error.message}\n\nMake sure to run: python serve.py`);
+            }
+        }
+
+        async function loadIncidents() {
+            try {
+                const response = await fetch(`${API_BASE}/incidents`);
+                const data = await response.json();
+                
+                const select = document.getElementById('incidentSelect');
+                select.innerHTML = '';
+                
+                if (data.incidents && data.incidents.length > 0) {
+                    data.incidents.forEach(incident => {
+                        const option = document.createElement('option');
+                        option.value = incident.id;
+                        option.textContent = `${incident.id} - ${incident.title}`;
+                        select.appendChild(option);
+                    });
+                    currentIncident = data.incidents[0].id;
+                } else {
+                    const option = document.createElement('option');
+                    option.value = 'TCK-1001';
+                    option.textContent = 'TCK-1001 - Checkout intermittently timing out';
+                    select.appendChild(option);
+                }
+            } catch (error) {
+                console.error('Failed to load incidents:', error);
+            }
+        }
+
+        function updateStatus(text, type) {
+            const statusText = document.getElementById('statusText');
+            const statusDot = document.getElementById('statusDot');
+            const lastUpdate = document.getElementById('lastUpdate');
+            
+            statusText.textContent = text;
+            lastUpdate.textContent = new Date().toLocaleTimeString();
+            
+            statusDot.style.background = type === 'success' ? '#28a745' : 
+                                       type === 'warning' ? '#ffc107' : '#dc3545';
+        }
+
+        function appendOutput(text) {
+            const output = document.getElementById('output');
+            output.textContent += text + '\n';
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            document.getElementById('output').textContent = '';
+        }
+
+        function showProgress() {
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            progressBar.style.display = 'block';
+            progressFill.style.width = '0%';
+            
+            // Animate progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+                progressFill.style.width = progress + '%';
+            }, 200);
+            
+            return interval;
+        }
+
+        function hideProgress() {
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.display = 'none';
+        }
+
+        function getCurrentIncident() {
+            const select = document.getElementById('incidentSelect');
+            return select.value || 'TCK-1001';
+        }
+
+        async function makeAPICall(endpoint, method = 'POST') {
+            const incident = getCurrentIncident();
+            const progressInterval = showProgress();
+            
+            try {
+                const url = `${API_BASE}${endpoint.replace('{incident}', incident)}`;
+                appendOutput(`🚀 ${method} ${url}\n`);
+                
+                const response = await fetch(url, { method });
+                const data = await response.json();
+                
+                clearInterval(progressInterval);
+                hideProgress();
+                
+                if (response.ok) {
+                    appendOutput(`✅ Success!\n${JSON.stringify(data, null, 2)}\n`);
+                    updateStatus('🟢 Operation Complete', 'success');
+                    
+                    // Auto-refresh artifacts after operations that generate files
+                    if (endpoint.includes('rca') || endpoint.includes('compare') || endpoint.includes('demo')) {
+                        setTimeout(refreshArtifacts, 1000);
+                    }
+                } else {
+                    appendOutput(`❌ Error: ${response.status}\n${JSON.stringify(data, null, 2)}\n`);
+                    updateStatus('🔴 Operation Failed', 'error');
+                }
+                
+                return data;
+            } catch (error) {
+                clearInterval(progressInterval);
+                hideProgress();
+                appendOutput(`❌ Network Error: ${error.message}\n`);
+                updateStatus('🔴 Network Error', 'error');
+                throw error;
+            }
+        }
+
+        // API Operation Functions
+        async function runTriage() {
+            await makeAPICall('/triage/{incident}');
+        }
+
+        async function generateInitialRCA() {
+            await makeAPICall('/rca/initial/{incident}');
+        }
+
+        async function applyFix() {
+            await makeAPICall('/apply-fix/{incident}');
+        }
+
+        async function generateFinalRCA() {
+            await makeAPICall('/rca/final/{incident}');
+        }
+
+        async function generateComparison() {
+            await makeAPICall('/compare/{incident}');
+        }
+
+        async function createTicket() {
+            await makeAPICall('/ticket/{incident}');
+        }
+
+        async function runFullDemo() {
+            appendOutput('🚀 Starting Full Demo Pipeline...\n');
+            await makeAPICall('/demo/{incident}');
+        }
+
+        async function refreshArtifacts() {
+            try {
+                const response = await fetch(`${API_BASE}/artifacts`);
+                const data = await response.json();
+                
+                const container = document.getElementById('artifactsContainer');
+                
+                if (data.documents && data.documents.length > 0) {
+                    let html = '<div class="artifacts-grid">';
+                    
+                    data.documents.forEach(doc => {
+                        const sizeKB = Math.round(doc.size / 1024);
+                        const modifiedDate = new Date(doc.modified * 1000).toLocaleString();
+                        
+                        html += `
+                            <div class="artifact-card">
+                                <div class="artifact-name">${doc.name}</div>
+                                <div class="artifact-meta">
+                                    Size: ${sizeKB} KB<br>
+                                    Modified: ${modifiedDate}<br>
+                                    Type: ${doc.type}
+                                </div>
+                                <a href="${API_BASE}${doc.download_url}" class="artifact-download" target="_blank">
+                                    📥 Download
+                                </a>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    
+                    if (data.tickets && data.tickets.length > 0) {
+                        html += '<h3 style="margin-top: 20px; color: #2c3e50;">🎫 Linear Tickets</h3>';
+                        html += '<div class="artifacts-grid">';
+                        
+                        data.tickets.forEach(ticket => {
+                            html += `
+                                <div class="artifact-card">
+                                    <div class="artifact-name">${ticket.id}</div>
+                                    <div class="artifact-meta">
+                                        Title: ${ticket.title}<br>
+                                        Team: ${ticket.team}<br>
+                                        Status: ${ticket.status}
+                                    </div>
+                                    <a href="${API_BASE}${ticket.download_url}" class="artifact-download" target="_blank">
+                                        📥 Download JSON
+                                    </a>
+                                </div>
+                            `;
+                        });
+                        
+                        html += '</div>';
+                    }
+                    
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = `
+                        <p style="color: #6c757d; text-align: center; padding: 20px;">
+                            No artifacts found. Run some operations to generate RCA documents!
+                        </p>
+                    `;
+                }
+                
+                updateStatus('🟢 Artifacts Refreshed', 'success');
+            } catch (error) {
+                document.getElementById('artifactsContainer').innerHTML = `
+                    <div class="error">
+                        Failed to load artifacts: ${error.message}
+                    </div>
+                `;
+                updateStatus('🔴 Refresh Failed', 'error');
+            }
+        }
+
+        // Update incident selection
+        document.getElementById('incidentSelect').addEventListener('change', function() {
+            currentIncident = this.value;
+            appendOutput(`📋 Selected incident: ${currentIncident}\n`);
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1': e.preventDefault(); runTriage(); break;
+                    case '2': e.preventDefault(); generateInitialRCA(); break;
+                    case '3': e.preventDefault(); applyFix(); break;
+                    case '4': e.preventDefault(); generateFinalRCA(); break;
+                    case '5': e.preventDefault(); generateComparison(); break;
+                    case '6': e.preventDefault(); createTicket(); break;
+                    case 'r': e.preventDefault(); refreshArtifacts(); break;
+                    case 'd': e.preventDefault(); runFullDemo(); break;
+                }
+            }
+        });
+
+        // Auto-refresh artifacts every 30 seconds
+        setInterval(refreshArtifacts, 30000);
+    </script>
+</body>
+</html>

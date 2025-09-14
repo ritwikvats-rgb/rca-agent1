@@ -5,3 +5,5 @@ pyyaml
 python-dotenv
 requests
 reportlab
+fastapi
+uvicorn[standard]

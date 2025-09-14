@@ -36,15 +36,31 @@ This agent simulates a complete incident response workflow:
 
 ## Quick Start
 
-### macOS/Linux:
+### 🌐 Web Interface (Recommended)
 ```bash
-python -m venv .venv
+# Setup
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Start web server
+python serve.py
+
+# Open web/index.html in your browser
+# Use the dashboard to run operations with buttons!
+```
+
+### 📱 Command Line Interface
+
+#### macOS/Linux:
+```bash
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 bash scripts/demo.sh
 ```
 
-### Windows (PowerShell):
+#### Windows (PowerShell):
 ```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
@@ -59,6 +75,24 @@ python -m rca.cli apply-fix incidents/TCK-1001.json
 python -m rca.cli rca incidents/TCK-1001.json --final --fix-commit <PASTE_FIX_COMMIT_HASH>
 python -m rca.cli compare incidents/TCK-1001.json
 ```
+
+## 🎨 Web Dashboard Features
+
+The RCA Agent now includes a professional web interface:
+
+- **🎯 Interactive Operations**: Click buttons to run triage, generate RCAs, apply fixes
+- **📊 Real-time Output**: See API responses and command output in real-time
+- **📁 Artifact Browser**: Download generated documents (PDFs, Markdown, tickets)
+- **🔄 Auto-refresh**: Artifacts update automatically after operations
+- **⚡ One-Click Demo**: Run the complete pipeline with a single button
+- **📱 Responsive Design**: Works on desktop and mobile devices
+
+### Web Interface Usage:
+1. **Start Server**: `python serve.py` (runs on http://127.0.0.1:8000)
+2. **Open Dashboard**: Open `web/index.html` in your browser
+3. **Run Operations**: Use buttons to execute RCA workflow steps
+4. **Download Results**: Click download links for generated documents
+5. **API Documentation**: Visit http://127.0.0.1:8000/docs for API details
 
 ## How It Works
 
