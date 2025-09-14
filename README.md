@@ -1,10 +1,10 @@
-# RCA Agent (Dummy, Offline) — Full End-to-End
+# Causify (Dummy, Offline) — Full End-to-End
 
-A demonstration project showing how an RCA (Root Cause Analysis) Agent works from incident to resolution.
+A demonstration project showing how Causify (Root Cause Analysis Agent) works from incident to resolution.
 
 ## What This Does
 
-This agent simulates a complete incident response workflow:
+Causify simulates a complete incident response workflow:
 
 1. **Reads incidents** from JSON files with service/endpoint/error details
 2. **Maps incidents to code** using mock data tables (routes, jobs, errors, logs)
@@ -78,7 +78,7 @@ python -m rca.cli compare incidents/TCK-1001.json
 
 ## 🎨 Web Dashboard Features
 
-The RCA Agent now includes a professional web interface:
+Causify now includes a professional web interface:
 
 - **🎯 Interactive Operations**: Click buttons to run triage, generate RCAs, apply fixes
 - **📊 Real-time Output**: See API responses and command output in real-time
@@ -97,7 +97,7 @@ The RCA Agent now includes a professional web interface:
 ## How It Works
 
 ### 1. Incident Analysis
-The agent reads incident JSON files containing:
+Causify reads incident JSON files containing:
 - Service, endpoint, job IDs
 - Error messages and stack traces
 - Timeline information
