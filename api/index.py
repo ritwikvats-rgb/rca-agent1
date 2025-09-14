@@ -165,7 +165,5 @@ async def not_found_handler(request, exc):
     )
 
 # This is the entry point for Vercel
-def handler(request):
-    from mangum import Mangum
-    asgi_handler = Mangum(app)
-    return asgi_handler(request, {})
+from mangum import Mangum
+handler = Mangum(app, lifespan="off")
