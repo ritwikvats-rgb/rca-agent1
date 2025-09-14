@@ -125,12 +125,58 @@
             transform: translateY(0);
         }
 
+        .btn:disabled {
+            background: #6c757d !important;
+            cursor: not-allowed;
+            opacity: 0.6;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .btn:disabled:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
         .btn-primary { background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); }
         .btn-success { background: linear-gradient(135deg, #27ae60 0%, #229954 100%); }
         .btn-warning { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); }
         .btn-danger { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
         .btn-info { background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); }
         .btn-secondary { background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%); }
+
+        .btn-completed {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+            position: relative;
+        }
+
+        .btn-completed::after {
+            content: "✓";
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: bold;
+        }
+
+        .workflow-status {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #1565c0;
+        }
+
+        .workflow-status h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+
+        .workflow-status p {
+            margin: 0;
+            font-size: 14px;
+        }
 
         .btn-full {
             grid-column: 1 / -1;
@@ -273,23 +319,28 @@
                     </select>
                 </div>
 
+                <div id="workflowStatus" class="workflow-status" style="display: none;">
+                    <h3 id="workflowTitle">Workflow Status</h3>
+                    <p id="workflowMessage">Ready to start workflow</p>
+                </div>
+
                 <div class="button-grid">
-                    <button class="btn btn-primary" onclick="runTriage()">
+                    <button id="triageBtn" class="btn btn-primary" onclick="runTriage()">
                         🔍 Triage
                     </button>
-                    <button class="btn btn-info" onclick="generateInitialRCA()">
+                    <button id="initialRCABtn" class="btn btn-info" onclick="generateInitialRCA()" disabled>
                         📋 Initial RCA
                     </button>
-                    <button class="btn btn-warning" onclick="applyFix()">
+                    <button id="applyFixBtn" class="btn btn-warning" onclick="applyFix()" disabled>
                         🔧 Apply Fix
                     </button>
-                    <button class="btn btn-success" onclick="generateFinalRCA()">
+                    <button id="finalRCABtn" class="btn btn-success" onclick="generateFinalRCA()" disabled>
                         ✅ Final RCA
                     </button>
-                    <button class="btn btn-secondary" onclick="generateComparison()">
+                    <button id="compareBtn" class="btn btn-secondary" onclick="generateComparison()" disabled>
                         📊 Compare
                     </button>
-                    <button class="btn btn-info" onclick="createTicket()">
+                    <button id="ticketBtn" class="btn btn-info" onclick="createTicket()" disabled>
                         🎫 Create Ticket
                     </button>
                 </div>
@@ -382,91 +433,219 @@ Click any button above to see the RCA Agent in action!
         }
 
         function runTriage() {
+            if (workflowState.triageCompleted) {
+                appendOutput('⚠️ Triage already completed for this incident');
+                return;
+            }
+
+            disableAllButtons();
+            showWorkflowStatus('🔍 Triage in Progress', 'Analyzing incident and identifying suspects...');
+            
             const incident = getIncidentData(currentIncident);
-            simulateAPICall('Triage Analysis', {
-                incident_id: currentIncident,
-                status: 'success',
-                suspect: {
-                    repo: incident.repo,
-                    file: incident.file,
-                    score: 8,
-                    reasons: ['endpoint match', 'error signature match', 'recent changes']
-                },
-                confidence: '85%',
-                service: incident.service,
-                error_type: incident.error
-            });
+            appendOutput(`🚀 Triage Analysis started for ${currentIncident}...`);
+            
+            setTimeout(() => {
+                workflowState.triageCompleted = true;
+                appendOutput(`✅ Triage Analysis completed successfully!`);
+                appendOutput(`📊 Response: ${JSON.stringify({
+                    incident_id: currentIncident,
+                    status: 'success',
+                    suspect: {
+                        repo: incident.repo,
+                        file: incident.file,
+                        score: 8,
+                        reasons: ['endpoint match', 'error signature match', 'recent changes']
+                    },
+                    confidence: '85%',
+                    service: incident.service,
+                    error_type: incident.error
+                }, null, 2)}`);
+                
+                showWorkflowStatus('✅ Triage Complete', 'Suspect identified. You can now generate Initial RCA.');
+                updateButtonStates();
+                updateStatus(`🟢 Triage Complete`);
+            }, 2000);
         }
 
         function generateInitialRCA() {
+            if (!workflowState.triageCompleted) {
+                appendOutput('⚠️ Please complete Triage first');
+                return;
+            }
+            if (workflowState.initialRCACompleted) {
+                appendOutput('⚠️ Initial RCA already completed for this incident');
+                return;
+            }
+
+            disableAllButtons();
+            showWorkflowStatus('📋 Initial RCA in Progress', 'Generating comprehensive root cause analysis...');
+            
             const incident = getIncidentData(currentIncident);
-            simulateAPICall('Initial RCA Generation', {
-                incident_id: currentIncident,
-                status: 'success',
-                files_generated: [`${currentIncident}_initial_rca.md`, `${currentIncident}_initial_rca.pdf`],
-                analysis: {
-                    root_cause: incident.root_cause,
-                    business_impact: incident.impact,
-                    service: incident.service,
-                    error_signature: incident.error
-                }
-            });
+            appendOutput(`🚀 Initial RCA Generation started for ${currentIncident}...`);
+            
+            setTimeout(() => {
+                workflowState.initialRCACompleted = true;
+                appendOutput(`✅ Initial RCA Generation completed successfully!`);
+                appendOutput(`📊 Response: ${JSON.stringify({
+                    incident_id: currentIncident,
+                    status: 'success',
+                    files_generated: [`${currentIncident}_initial_rca.md`, `${currentIncident}_initial_rca.pdf`],
+                    analysis: {
+                        root_cause: incident.root_cause,
+                        business_impact: incident.impact,
+                        service: incident.service,
+                        error_signature: incident.error
+                    }
+                }, null, 2)}`);
+                
+                showWorkflowStatus('✅ Initial RCA Complete', 'RCA documents generated. You can now apply the fix.');
+                updateButtonStates();
+                updateStatus(`🟢 Initial RCA Complete`);
+            }, 2500);
         }
 
         function applyFix() {
+            if (!workflowState.initialRCACompleted) {
+                appendOutput('⚠️ Please complete Initial RCA first');
+                return;
+            }
+            if (workflowState.fixApplied) {
+                appendOutput('⚠️ Fix already applied for this incident');
+                return;
+            }
+
+            disableAllButtons();
+            showWorkflowStatus('🔧 Applying Fix', 'Implementing code changes and deploying fix...');
+            
             const incident = getIncidentData(currentIncident);
-            simulateAPICall('Fix Application', {
-                incident_id: currentIncident,
-                status: 'success',
-                fix_commit: 'abc123def456',
-                files_changed: [incident.file],
-                fix_description: incident.fix,
-                service: incident.service
-            });
+            appendOutput(`🚀 Fix Application started for ${currentIncident}...`);
+            
+            setTimeout(() => {
+                workflowState.fixApplied = true;
+                appendOutput(`✅ Fix Application completed successfully!`);
+                appendOutput(`📊 Response: ${JSON.stringify({
+                    incident_id: currentIncident,
+                    status: 'success',
+                    fix_commit: 'abc123def456',
+                    files_changed: [incident.file],
+                    fix_description: incident.fix,
+                    service: incident.service
+                }, null, 2)}`);
+                
+                showWorkflowStatus('✅ Fix Applied', 'Code changes deployed. You can now generate Final RCA.');
+                updateButtonStates();
+                updateStatus(`🟢 Fix Applied`);
+            }, 3000);
         }
 
         function generateFinalRCA() {
+            if (!workflowState.fixApplied) {
+                appendOutput('⚠️ Please apply the fix first');
+                return;
+            }
+            if (workflowState.finalRCACompleted) {
+                appendOutput('⚠️ Final RCA already completed for this incident');
+                return;
+            }
+
+            disableAllButtons();
+            showWorkflowStatus('✅ Final RCA in Progress', 'Documenting resolution and post-mortem analysis...');
+            
             const incident = getIncidentData(currentIncident);
-            simulateAPICall('Final RCA Generation', {
-                incident_id: currentIncident,
-                status: 'success',
-                files_generated: [`${currentIncident}_final_rca.md`, `${currentIncident}_final_rca.pdf`],
-                resolution: {
-                    time_to_resolution: '2.5 hours',
-                    fix_applied: incident.fix,
-                    service: incident.service,
-                    post_mortem_complete: true
-                }
-            });
+            appendOutput(`🚀 Final RCA Generation started for ${currentIncident}...`);
+            
+            setTimeout(() => {
+                workflowState.finalRCACompleted = true;
+                appendOutput(`✅ Final RCA Generation completed successfully!`);
+                appendOutput(`📊 Response: ${JSON.stringify({
+                    incident_id: currentIncident,
+                    status: 'success',
+                    files_generated: [`${currentIncident}_final_rca.md`, `${currentIncident}_final_rca.pdf`],
+                    resolution: {
+                        time_to_resolution: '2.5 hours',
+                        fix_applied: incident.fix,
+                        service: incident.service,
+                        post_mortem_complete: true
+                    }
+                }, null, 2)}`);
+                
+                showWorkflowStatus('✅ Final RCA Complete', 'Resolution documented. You can now create comparison and tickets.');
+                updateButtonStates();
+                updateStatus(`🟢 Final RCA Complete`);
+            }, 2500);
         }
 
         function generateComparison() {
+            if (!workflowState.finalRCACompleted) {
+                appendOutput('⚠️ Please complete Final RCA first');
+                return;
+            }
+            if (workflowState.comparisonCompleted) {
+                appendOutput('⚠️ Comparison already generated for this incident');
+                return;
+            }
+
+            disableAllButtons();
+            showWorkflowStatus('📊 Generating Comparison', 'Creating before/after analysis...');
+            
             const incident = getIncidentData(currentIncident);
-            simulateAPICall('Before/After Comparison', {
-                incident_id: currentIncident,
-                status: 'success',
-                files_generated: [`${currentIncident}_comparison.md`],
-                comparison: {
-                    before: `Issue: ${incident.root_cause}`,
-                    after: `Fixed: ${incident.fix}`,
-                    service: incident.service,
-                    improvement: '99.7% success rate'
-                }
-            });
+            appendOutput(`🚀 Before/After Comparison started for ${currentIncident}...`);
+            
+            setTimeout(() => {
+                workflowState.comparisonCompleted = true;
+                appendOutput(`✅ Before/After Comparison completed successfully!`);
+                appendOutput(`📊 Response: ${JSON.stringify({
+                    incident_id: currentIncident,
+                    status: 'success',
+                    files_generated: [`${currentIncident}_comparison.md`],
+                    comparison: {
+                        before: `Issue: ${incident.root_cause}`,
+                        after: `Fixed: ${incident.fix}`,
+                        service: incident.service,
+                        improvement: '99.7% success rate'
+                    }
+                }, null, 2)}`);
+                
+                showWorkflowStatus('✅ Comparison Complete', 'Before/after analysis ready for review.');
+                updateButtonStates();
+                updateStatus(`🟢 Comparison Complete`);
+            }, 2000);
         }
 
         function createTicket() {
+            if (!workflowState.finalRCACompleted) {
+                appendOutput('⚠️ Please complete Final RCA first');
+                return;
+            }
+            if (workflowState.ticketCreated) {
+                appendOutput('⚠️ Ticket already created for this incident');
+                return;
+            }
+
+            disableAllButtons();
+            showWorkflowStatus('🎫 Creating Ticket', 'Generating Linear ticket with incident details...');
+            
             const incident = getIncidentData(currentIncident);
-            simulateAPICall('Ticket Creation', {
-                incident_id: currentIncident,
-                status: 'success',
-                ticket_id: `FTS-${currentIncident.split('-')[1]}`,
-                ticket_url: `https://linear.app/team/issue/FTS-${currentIncident.split('-')[1]}`,
-                team: 'Engineering',
-                priority: 'High',
-                title: incident.title,
-                service: incident.service
-            });
+            appendOutput(`🚀 Ticket Creation started for ${currentIncident}...`);
+            
+            setTimeout(() => {
+                workflowState.ticketCreated = true;
+                appendOutput(`✅ Ticket Creation completed successfully!`);
+                appendOutput(`📊 Response: ${JSON.stringify({
+                    incident_id: currentIncident,
+                    status: 'success',
+                    ticket_id: `FTS-${currentIncident.split('-')[1]}`,
+                    ticket_url: `https://linear.app/team/issue/FTS-${currentIncident.split('-')[1]}`,
+                    team: 'Engineering',
+                    priority: 'High',
+                    title: incident.title,
+                    service: incident.service
+                }, null, 2)}`);
+                
+                showWorkflowStatus('🎉 Workflow Complete', 'All steps completed successfully! Incident fully processed.');
+                updateButtonStates();
+                updateStatus(`🟢 Workflow Complete`);
+            }, 2000);
         }
 
         function runFullDemo() {
@@ -1006,14 +1185,97 @@ This is demonstration content. The actual RCA Agent generates comprehensive, rea
             return htmlContent;
         }
 
-        // Global incident context
+        // Global incident context and workflow state
         let currentIncident = 'TCK-1001';
-        
+        let workflowState = {
+            triageCompleted: false,
+            initialRCACompleted: false,
+            fixApplied: false,
+            finalRCACompleted: false,
+            comparisonCompleted: false,
+            ticketCreated: false
+        };
+
+        // Workflow management functions
+        function resetWorkflow() {
+            workflowState = {
+                triageCompleted: false,
+                initialRCACompleted: false,
+                fixApplied: false,
+                finalRCACompleted: false,
+                comparisonCompleted: false,
+                ticketCreated: false
+            };
+            updateButtonStates();
+            hideWorkflowStatus();
+        }
+
+        function updateButtonStates() {
+            // Get all buttons
+            const triageBtn = document.getElementById('triageBtn');
+            const initialRCABtn = document.getElementById('initialRCABtn');
+            const applyFixBtn = document.getElementById('applyFixBtn');
+            const finalRCABtn = document.getElementById('finalRCABtn');
+            const compareBtn = document.getElementById('compareBtn');
+            const ticketBtn = document.getElementById('ticketBtn');
+
+            // Reset all button states
+            [triageBtn, initialRCABtn, applyFixBtn, finalRCABtn, compareBtn, ticketBtn].forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('btn-completed');
+            });
+
+            // Apply sequential logic
+            triageBtn.disabled = false; // Always available
+            initialRCABtn.disabled = !workflowState.triageCompleted;
+            applyFixBtn.disabled = !workflowState.initialRCACompleted;
+            finalRCABtn.disabled = !workflowState.fixApplied;
+            compareBtn.disabled = !workflowState.finalRCACompleted;
+            ticketBtn.disabled = !workflowState.finalRCACompleted;
+
+            // Mark completed steps
+            if (workflowState.triageCompleted) triageBtn.classList.add('btn-completed');
+            if (workflowState.initialRCACompleted) initialRCABtn.classList.add('btn-completed');
+            if (workflowState.fixApplied) applyFixBtn.classList.add('btn-completed');
+            if (workflowState.finalRCACompleted) finalRCABtn.classList.add('btn-completed');
+            if (workflowState.comparisonCompleted) compareBtn.classList.add('btn-completed');
+            if (workflowState.ticketCreated) ticketBtn.classList.add('btn-completed');
+        }
+
+        function showWorkflowStatus(title, message) {
+            const statusDiv = document.getElementById('workflowStatus');
+            const titleEl = document.getElementById('workflowTitle');
+            const messageEl = document.getElementById('workflowMessage');
+            
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            statusDiv.style.display = 'block';
+        }
+
+        function hideWorkflowStatus() {
+            document.getElementById('workflowStatus').style.display = 'none';
+        }
+
+        function disableAllButtons() {
+            const buttons = ['triageBtn', 'initialRCABtn', 'applyFixBtn', 'finalRCABtn', 'compareBtn', 'ticketBtn'];
+            buttons.forEach(id => {
+                document.getElementById(id).disabled = true;
+            });
+        }
+
+        function enableNextStep() {
+            updateButtonStates();
+        }
+
         function updateIncidentContext() {
             const select = document.getElementById('incidentSelect');
             currentIncident = select.value;
             appendOutput(`🔄 Switched to incident: ${currentIncident}`);
             updateStatus(`🟢 Context: ${currentIncident}`);
+            
+            // Reset workflow for new incident
+            resetWorkflow();
+            appendOutput(`🔄 Workflow reset for ${currentIncident} - ready to start from Triage`);
             
             // Clear artifacts and reset for new incident
             const container = document.getElementById('artifactsContainer');
