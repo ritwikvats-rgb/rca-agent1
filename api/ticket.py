@@ -1,45 +1,45 @@
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from flask import Flask, jsonify, request
 import os
+import json
 
-app = FastAPI()
+app = Flask(__name__)
 
-class TicketRequest(BaseModel):
-    incident_file: str
-    team: str = "RIT"
-
-@app.post("/ticket")
-async def create_ticket(request_data: TicketRequest):
+@app.route('/ticket', methods=['POST'])
+def create_ticket():
     """Create Linear ticket - simplified version without external dependencies"""
     try:
+        # Get request data
+        data = request.get_json() or {}
+        incident_file = data.get('incident_file', 'TCK-1001.json')
+        team = data.get('team', 'RIT')
+        
         # Get Linear API key from environment
         linear_api_key = os.getenv("LINEAR_API_KEY")
         
         if not linear_api_key:
             # No API key - return informative mock ticket
-            return {
+            return jsonify({
                 "status": "success",
                 "ticket_id": "RIT-MOCK-001",
                 "ticket_url": "https://linear.app/ritwik-vats/issue/RIT-MOCK-001",
                 "type": "mock",
                 "message": "Mock ticket created - Add LINEAR_API_KEY to Vercel environment for real tickets"
-            }
+            })
         
         # Try to import requests - if it fails, return mock
         try:
             import requests
         except ImportError:
-            return {
+            return jsonify({
                 "status": "success",
                 "ticket_id": "RIT-MOCK-002",
                 "ticket_url": "https://linear.app/ritwik-vats/issue/RIT-MOCK-002",
                 "type": "mock",
                 "message": "Mock ticket created - requests library not available in Vercel"
-            }
+            })
         
         # Extract incident ID from request
-        incident_id = request_data.incident_file.split('/')[-1].replace('.json', '') if '/' in request_data.incident_file else request_data.incident_file.replace('.json', '')
+        incident_id = incident_file.split('/')[-1].replace('.json', '') if '/' in incident_file else incident_file.replace('.json', '')
         
         # Create incident data based on incident ID
         incident_data = {
@@ -84,7 +84,7 @@ async def create_ticket(request_data: TicketRequest):
             "FTS": "bda83a58-5164-4f3c-8d99-eafb7e7deb72"   # Default to same team
         }
         
-        team_id = team_mapping.get(request_data.team, "bda83a58-5164-4f3c-8d99-eafb7e7deb72")
+        team_id = team_mapping.get(team, "bda83a58-5164-4f3c-8d99-eafb7e7deb72")
         
         variables = {
             "input": {
@@ -108,13 +108,13 @@ async def create_ticket(request_data: TicketRequest):
                 timeout=30  # Increased timeout for Vercel
             )
         except requests.exceptions.RequestException as e:
-            return {
+            return jsonify({
                 "status": "success",
                 "ticket_id": "RIT-MOCK-006",
                 "ticket_url": "https://linear.app/ritwik-vats/issue/RIT-MOCK-006",
                 "type": "mock",
                 "message": f"Mock ticket created - Network error: {str(e)[:100]}"
-            }
+            })
         
         # Check response
         if response.status_code == 200:
@@ -123,44 +123,44 @@ async def create_ticket(request_data: TicketRequest):
             # Check for GraphQL errors
             if "errors" in result:
                 error_msg = result["errors"][0].get("message", "Unknown GraphQL error")
-                return {
+                return jsonify({
                     "status": "success",
                     "ticket_id": "RIT-MOCK-003",
                     "ticket_url": "https://linear.app/ritwik-vats/issue/RIT-MOCK-003",
                     "type": "mock",
                     "message": f"Mock ticket created - Linear API error: {error_msg}"
-                }
+                })
             
             # Check for successful issue creation
             if result.get("data", {}).get("issueCreate", {}).get("success"):
                 issue = result["data"]["issueCreate"]["issue"]
-                return {
+                return jsonify({
                     "status": "success",
                     "ticket_id": issue["identifier"],
                     "ticket_url": issue["url"],
                     "type": "real",
                     "message": f"✅ Created real Linear ticket {issue['identifier']}"
-                }
+                })
         
         # API call failed - return detailed mock
-        return {
+        return jsonify({
             "status": "success",
             "ticket_id": "RIT-MOCK-004",
             "ticket_url": "https://linear.app/ritwik-vats/issue/RIT-MOCK-004",
             "type": "mock",
             "message": f"Mock ticket created - Linear API returned {response.status_code}"
-        }
+        })
             
     except Exception as e:
         # Detailed error handling
-        return {
+        return jsonify({
             "status": "success",
             "ticket_id": "RIT-MOCK-005",
             "ticket_url": "https://linear.app/ritwik-vats/issue/RIT-MOCK-005",
             "type": "mock",
             "message": f"Mock ticket created - Exception: {str(e)[:100]}"
-        }
+        })
 
-# This is the entry point for Vercel
-from mangum import Mangum
-handler = Mangum(app, lifespan="off")
+# For Vercel
+def handler(request):
+    return app(request.environ, lambda status, headers: None)
