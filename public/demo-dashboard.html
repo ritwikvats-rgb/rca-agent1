@@ -356,28 +356,9 @@
                     🔄 Refresh Artifacts
                 </button>
                 <div id="artifactsContainer">
-                    <div class="artifacts-grid">
-                        <div class="artifact-card">
-                            <div class="artifact-name">TCK-1001_initial_rca.md</div>
-                            <div class="artifact-meta">
-                                Size: 2 KB<br>
-                                Modified: Just now<br>
-                                Type: Markdown
-                            </div>
-                            <a href="#" class="artifact-download" onclick="downloadDemo('initial_rca.md')">
-                                📥 Download
-                            </a>
-                        </div>
-                        <div class="artifact-card">
-                            <div class="artifact-name">TCK-1001_final_rca.pdf</div>
-                            <div class="artifact-meta">
-                                Size: 4 KB<br>
-                                Modified: Just now<br>
-                                Type: PDF
-                            </div>
-                            <a href="#" class="artifact-download" onclick="downloadDemo('final_rca.pdf')">
-                                📥 Download
-                            </a>
+                    <div class="artifacts-grid" id="artifactsGrid">
+                        <div style="text-align: center; color: #6c757d; padding: 40px; font-style: italic;">
+                            📁 No artifacts yet. Complete workflow steps to generate RCA documents.
                         </div>
                     </div>
                 </div>
@@ -501,6 +482,10 @@ Click any button above to see the RCA Agent in action!
                 showWorkflowStatus('✅ Initial RCA Complete', 'RCA documents generated. You can now apply the fix.');
                 updateButtonStates();
                 updateStatus(`🟢 Initial RCA Complete`);
+                
+                // Add initial RCA artifacts
+                addArtifact(`${currentIncident}_initial_rca.md`, 'Markdown', '2.1 KB');
+                addArtifact(`${currentIncident}_initial_rca.pdf`, 'PDF', '4.2 KB');
             }, 2500);
         }
 
@@ -572,6 +557,10 @@ Click any button above to see the RCA Agent in action!
                 showWorkflowStatus('✅ Final RCA Complete', 'Resolution documented. You can now create comparison and tickets.');
                 updateButtonStates();
                 updateStatus(`🟢 Final RCA Complete`);
+                
+                // Add final RCA artifacts
+                addArtifact(`${currentIncident}_final_rca.md`, 'Markdown', '3.8 KB');
+                addArtifact(`${currentIncident}_final_rca.pdf`, 'PDF', '6.1 KB');
             }, 2500);
         }
 
@@ -609,6 +598,9 @@ Click any button above to see the RCA Agent in action!
                 showWorkflowStatus('✅ Comparison Complete', 'Before/after analysis ready for review.');
                 updateButtonStates();
                 updateStatus(`🟢 Comparison Complete`);
+                
+                // Add comparison artifact
+                addArtifact(`${currentIncident}_comparison.md`, 'Markdown', '1.8 KB');
             }, 2000);
         }
 
@@ -645,6 +637,9 @@ Click any button above to see the RCA Agent in action!
                 showWorkflowStatus('🎉 Workflow Complete', 'All steps completed successfully! Incident fully processed.');
                 updateButtonStates();
                 updateStatus(`🟢 Workflow Complete`);
+                
+                // Add ticket artifact
+                addArtifact(`${currentIncident}_ticket.json`, 'JSON', '0.9 KB');
             }, 2000);
         }
 
@@ -1277,33 +1272,42 @@ This is demonstration content. The actual RCA Agent generates comprehensive, rea
             resetWorkflow();
             appendOutput(`🔄 Workflow reset for ${currentIncident} - ready to start from Triage`);
             
-            // Clear artifacts and reset for new incident
-            const container = document.getElementById('artifactsContainer');
-            const grid = container.querySelector('.artifacts-grid');
+            // Clear artifacts for new incident
+            clearArtifacts();
+        }
+
+        function clearArtifacts() {
+            const grid = document.getElementById('artifactsGrid');
             grid.innerHTML = `
-                <div class="artifact-card">
-                    <div class="artifact-name">${currentIncident}_initial_rca.md</div>
-                    <div class="artifact-meta">
-                        Size: 2 KB<br>
-                        Modified: Just now<br>
-                        Type: Markdown
-                    </div>
-                    <a href="#" class="artifact-download" onclick="downloadDemo('initial_rca.md')">
-                        📥 Download
-                    </a>
-                </div>
-                <div class="artifact-card">
-                    <div class="artifact-name">${currentIncident}_final_rca.pdf</div>
-                    <div class="artifact-meta">
-                        Size: 4 KB<br>
-                        Modified: Just now<br>
-                        Type: PDF
-                    </div>
-                    <a href="#" class="artifact-download" onclick="downloadDemo('${currentIncident}_final_rca.pdf')">
-                        📥 Download
-                    </a>
+                <div style="text-align: center; color: #6c757d; padding: 40px; font-style: italic;">
+                    📁 No artifacts yet. Complete workflow steps to generate RCA documents.
                 </div>
             `;
+        }
+
+        function addArtifact(filename, type, size) {
+            const grid = document.getElementById('artifactsGrid');
+            
+            // Remove "no artifacts" message if it exists
+            const noArtifactsMsg = grid.querySelector('div[style*="text-align: center"]');
+            if (noArtifactsMsg) {
+                grid.removeChild(noArtifactsMsg);
+            }
+            
+            const artifactCard = document.createElement('div');
+            artifactCard.className = 'artifact-card';
+            artifactCard.innerHTML = `
+                <div class="artifact-name">${filename}</div>
+                <div class="artifact-meta">
+                    Size: ${size}<br>
+                    Modified: Just now<br>
+                    Type: ${type}
+                </div>
+                <a href="#" class="artifact-download" onclick="downloadDemo('${filename}')">
+                    📥 Download
+                </a>
+            `;
+            grid.appendChild(artifactCard);
         }
 
         function getIncidentData(incidentId) {
