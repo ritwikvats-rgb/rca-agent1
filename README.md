@@ -172,3 +172,39 @@ The system is designed to be:
 - **Offline**: No external dependencies for core functionality
 
 This demonstrates how an RCA agent could work in production with real GitHub, Linear, and monitoring integrations.
+
+## 🚀 Hosting & Deployment
+
+The RCA Agent is ready for production hosting with Docker support:
+
+### Quick Deployment
+```bash
+# Simple Docker deployment
+./scripts/deploy.sh
+
+# Production deployment with Nginx
+./scripts/deploy.sh production
+```
+
+### Hosting Options
+- **Docker**: Complete containerization with health checks
+- **AWS ECS**: Production-ready with load balancing
+- **Google Cloud Run**: Serverless container hosting
+- **Azure Container Instances**: Simple cloud deployment
+- **Heroku/Railway**: Platform-as-a-Service options
+- **DigitalOcean**: App Platform deployment
+
+### Features
+- 🐳 **Docker & Docker Compose** configurations
+- 🌐 **Nginx reverse proxy** for production
+- 🔒 **SSL/HTTPS support** with Let's Encrypt
+- 📊 **Health checks** and monitoring
+- 🔄 **Auto-restart** and scaling options
+- 📁 **Persistent storage** for artifacts
+
+For detailed hosting instructions, see [HOSTING.md](HOSTING.md).
+
+### Access URLs
+- **Dashboard**: `http://localhost/` (production) or `http://localhost:8000/web/` (development)
+- **API**: `http://localhost:8000/` or `http://localhost/api/` (with Nginx)
+- **API Docs**: `http://localhost:8000/docs`
