@@ -602,7 +602,7 @@ Click any button above to see the RCA Agent in action!
             }, 2000);
         }
 
-        function createTicket() {
+        async function createTicket() {
             if (!workflowState.finalRCACompleted) {
                 appendOutput('⚠️ Please complete Final RCA first');
                 return;
@@ -613,32 +613,62 @@ Click any button above to see the RCA Agent in action!
             }
 
             disableAllButtons();
-            showWorkflowStatus('🎫 Creating Ticket', 'Generating Linear ticket with incident details...');
+            showWorkflowStatus('🎫 Creating Ticket', 'Creating real Linear ticket with incident details...');
             
             const incident = getIncidentData(currentIncident);
-            appendOutput(`🚀 Ticket Creation started for ${currentIncident}...`);
+            appendOutput(`🚀 Real Linear Ticket Creation started for ${currentIncident}...`);
             
-            setTimeout(() => {
+            try {
+                // Call the real Linear API through our backend
+                const response = await fetch('/api/ticket', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        incident_file: `incidents/${currentIncident}.json`,
+                        team: 'RIT'  // Use the real team key
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                
                 workflowState.ticketCreated = true;
-                appendOutput(`✅ Ticket Creation completed successfully!`);
-                appendOutput(`📊 Response: ${JSON.stringify({
-                    incident_id: currentIncident,
-                    status: 'success',
-                    ticket_id: `FTS-${currentIncident.split('-')[1]}`,
-                    ticket_url: `https://linear.app/team/issue/FTS-${currentIncident.split('-')[1]}`,
-                    team: 'Engineering',
-                    priority: 'High',
-                    title: incident.title,
-                    service: incident.service
-                }, null, 2)}`);
+                appendOutput(`✅ Real Linear Ticket created successfully!`);
+                appendOutput(`📊 Response: ${JSON.stringify(result, null, 2)}`);
                 
-                showWorkflowStatus('🎉 Workflow Complete', 'All steps completed successfully! Incident fully processed.');
+                if (result.ticket_url) {
+                    appendOutput(`🔗 Linear Ticket URL: ${result.ticket_url}`);
+                    appendOutput(`🎫 Ticket ID: ${result.ticket_id}`);
+                    
+                    // Add clickable link artifact instead of JSON file
+                    addLinearTicketArtifact(result.ticket_id, result.ticket_url);
+                } else {
+                    // Fallback to mock if no real ticket was created
+                    addArtifact(`${currentIncident}_ticket.json`, 'JSON', '0.9 KB');
+                }
+                
+                showWorkflowStatus('🎉 Workflow Complete', 'All steps completed successfully! Real Linear ticket created.');
                 updateButtonStates();
-                updateStatus(`🟢 Workflow Complete`);
+                updateStatus(`🟢 Workflow Complete - Real Linear Ticket Created`);
                 
-                // Add ticket artifact
+            } catch (error) {
+                appendOutput(`❌ Error creating Linear ticket: ${error.message}`);
+                appendOutput(`🔄 Falling back to mock ticket creation...`);
+                
+                // Fallback to mock ticket
+                workflowState.ticketCreated = true;
+                appendOutput(`✅ Mock ticket created as fallback`);
                 addArtifact(`${currentIncident}_ticket.json`, 'JSON', '0.9 KB');
-            }, 2000);
+                
+                showWorkflowStatus('⚠️ Workflow Complete', 'Mock ticket created (Linear API unavailable)');
+                updateButtonStates();
+                updateStatus(`🟡 Workflow Complete - Mock Ticket`);
+            }
         }
 
         function runFullDemo() {
@@ -1363,6 +1393,32 @@ startxref
                 </div>
                 <a href="#" class="artifact-download" onclick="downloadDemo('${filename}')">
                     📥 Download
+                </a>
+            `;
+            grid.appendChild(artifactCard);
+        }
+
+        function addLinearTicketArtifact(ticketId, ticketUrl) {
+            const grid = document.getElementById('artifactsGrid');
+            
+            // Remove "no artifacts" message if it exists
+            const noArtifactsMsg = grid.querySelector('div[style*="text-align: center"]');
+            if (noArtifactsMsg) {
+                grid.removeChild(noArtifactsMsg);
+            }
+            
+            const artifactCard = document.createElement('div');
+            artifactCard.className = 'artifact-card';
+            artifactCard.style.border = '2px solid #28a745'; // Green border for Linear tickets
+            artifactCard.innerHTML = `
+                <div class="artifact-name">🎫 ${ticketId}</div>
+                <div class="artifact-meta">
+                    Type: Linear Ticket<br>
+                    Status: Created<br>
+                    Team: RIT
+                </div>
+                <a href="${ticketUrl}" target="_blank" class="artifact-download" style="background: #6f42c1;">
+                    🔗 Open in Linear
                 </a>
             `;
             grid.appendChild(artifactCard);
