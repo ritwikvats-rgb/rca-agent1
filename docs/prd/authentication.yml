@@ -1,0 +1,21 @@
+feature: Authentication v1
+goal: Secure user login with rate limiting protection against brute force attacks.
+business_rules:
+  - max_attempts_per_ip: 5
+  - rate_limit_window_minutes: 15
+  - block_duration_minutes: 30
+  - must_log_failed_attempts: true
+  - context_fields: [ip_address, timestamp, username, user_agent]
+acceptance_criteria:
+  - rate limiting triggers after 5 failed attempts
+  - blocked IPs cannot login for 30 minutes
+  - clear error messages for rate limited users
+  - monitoring alerts on high failure rates
+ownership:
+  team: @oncall-auth
+  code_paths:
+    - repo-auth/src/auth/login.py
+    - repo-auth/src/auth/rate_limiter.py
+metrics:
+  max_failure_rate: 5%
+  block_effectiveness: 99%

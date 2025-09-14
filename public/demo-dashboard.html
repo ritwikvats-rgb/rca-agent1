@@ -266,8 +266,10 @@
                 <h2>🎯 Incident Operations</h2>
                 
                 <div class="incident-selector">
-                    <select id="incidentSelect">
+                    <select id="incidentSelect" onchange="updateIncidentContext()">
                         <option value="TCK-1001">TCK-1001 - Checkout intermittently timing out</option>
+                        <option value="TCK-1002">TCK-1002 - User authentication failing with rate limit errors</option>
+                        <option value="TCK-1003">TCK-1003 - Refund processing stuck due to missing premium tier config</option>
                     </select>
                 </div>
 
@@ -380,80 +382,90 @@ Click any button above to see the RCA Agent in action!
         }
 
         function runTriage() {
+            const incident = getIncidentData(currentIncident);
             simulateAPICall('Triage Analysis', {
-                incident_id: 'TCK-1001',
+                incident_id: currentIncident,
                 status: 'success',
                 suspect: {
-                    repo: 'repo-orders',
-                    file: 'src/orders/checkout.ts',
+                    repo: incident.repo,
+                    file: incident.file,
                     score: 8,
                     reasons: ['endpoint match', 'error signature match', 'recent changes']
                 },
-                confidence: '85%'
+                confidence: '85%',
+                service: incident.service,
+                error_type: incident.error
             });
         }
 
         function generateInitialRCA() {
+            const incident = getIncidentData(currentIncident);
             simulateAPICall('Initial RCA Generation', {
-                incident_id: 'TCK-1001',
+                incident_id: currentIncident,
                 status: 'success',
-                files_generated: ['TCK-1001_initial_rca.md', 'TCK-1001_initial_rca.pdf'],
+                files_generated: [`${currentIncident}_initial_rca.md`, `${currentIncident}_initial_rca.pdf`],
                 analysis: {
-                    root_cause: 'Missing timeout guard in checkout flow',
-                    business_impact: '3% checkout failures (~₹40L/day)',
-                    technical_debt: 'No retry mechanism for payment gateway'
+                    root_cause: incident.root_cause,
+                    business_impact: incident.impact,
+                    service: incident.service,
+                    error_signature: incident.error
                 }
             });
         }
 
         function applyFix() {
+            const incident = getIncidentData(currentIncident);
             simulateAPICall('Fix Application', {
-                incident_id: 'TCK-1001',
+                incident_id: currentIncident,
                 status: 'success',
                 fix_commit: 'abc123def456',
-                files_changed: ['src/orders/checkout.ts'],
-                changes: [
-                    'Added 5s timeout guard',
-                    'Implemented retry mechanism',
-                    'Enhanced error logging'
-                ]
+                files_changed: [incident.file],
+                fix_description: incident.fix,
+                service: incident.service
             });
         }
 
         function generateFinalRCA() {
+            const incident = getIncidentData(currentIncident);
             simulateAPICall('Final RCA Generation', {
-                incident_id: 'TCK-1001',
+                incident_id: currentIncident,
                 status: 'success',
-                files_generated: ['TCK-1001_final_rca.md', 'TCK-1001_final_rca.pdf'],
+                files_generated: [`${currentIncident}_final_rca.md`, `${currentIncident}_final_rca.pdf`],
                 resolution: {
                     time_to_resolution: '2.5 hours',
-                    prevention_measures: ['Added timeout tests', 'CI/CD checks'],
+                    fix_applied: incident.fix,
+                    service: incident.service,
                     post_mortem_complete: true
                 }
             });
         }
 
         function generateComparison() {
+            const incident = getIncidentData(currentIncident);
             simulateAPICall('Before/After Comparison', {
-                incident_id: 'TCK-1001',
+                incident_id: currentIncident,
                 status: 'success',
-                files_generated: ['TCK-1001_comparison.md'],
+                files_generated: [`${currentIncident}_comparison.md`],
                 comparison: {
-                    before: 'No timeout handling',
-                    after: '5s timeout + retry logic',
+                    before: `Issue: ${incident.root_cause}`,
+                    after: `Fixed: ${incident.fix}`,
+                    service: incident.service,
                     improvement: '99.7% success rate'
                 }
             });
         }
 
         function createTicket() {
+            const incident = getIncidentData(currentIncident);
             simulateAPICall('Ticket Creation', {
-                incident_id: 'TCK-1001',
+                incident_id: currentIncident,
                 status: 'success',
-                ticket_id: 'FTS-123',
-                ticket_url: 'https://linear.app/team/issue/FTS-123',
+                ticket_id: `FTS-${currentIncident.split('-')[1]}`,
+                ticket_url: `https://linear.app/team/issue/FTS-${currentIncident.split('-')[1]}`,
                 team: 'Engineering',
-                priority: 'High'
+                priority: 'High',
+                title: incident.title,
+                service: incident.service
             });
         }
 
@@ -910,6 +922,80 @@ In a real deployment, this would contain:
 This is demonstration content. The actual RCA Agent generates comprehensive, real-world incident analysis documents based on your specific infrastructure and incidents.
 
 **End of Demo File**`;
+        }
+
+        // Global incident context
+        let currentIncident = 'TCK-1001';
+        
+        function updateIncidentContext() {
+            const select = document.getElementById('incidentSelect');
+            currentIncident = select.value;
+            appendOutput(`🔄 Switched to incident: ${currentIncident}`);
+            updateStatus(`🟢 Context: ${currentIncident}`);
+            
+            // Clear artifacts and reset for new incident
+            const container = document.getElementById('artifactsContainer');
+            const grid = container.querySelector('.artifacts-grid');
+            grid.innerHTML = `
+                <div class="artifact-card">
+                    <div class="artifact-name">${currentIncident}_initial_rca.md</div>
+                    <div class="artifact-meta">
+                        Size: 2 KB<br>
+                        Modified: Just now<br>
+                        Type: Markdown
+                    </div>
+                    <a href="#" class="artifact-download" onclick="downloadDemo('initial_rca.md')">
+                        📥 Download
+                    </a>
+                </div>
+                <div class="artifact-card">
+                    <div class="artifact-name">${currentIncident}_final_rca.pdf</div>
+                    <div class="artifact-meta">
+                        Size: 4 KB<br>
+                        Modified: Just now<br>
+                        Type: PDF
+                    </div>
+                    <a href="#" class="artifact-download" onclick="downloadDemo('final_rca.pdf')">
+                        📥 Download
+                    </a>
+                </div>
+            `;
+        }
+
+        function getIncidentData(incidentId) {
+            const incidents = {
+                'TCK-1001': {
+                    title: 'Checkout intermittently timing out',
+                    service: 'orders-api',
+                    repo: 'repo-orders',
+                    file: 'src/orders/checkout.ts',
+                    error: 'CheckoutTimeoutError',
+                    impact: '3% checkout failures (~₹40L/day)',
+                    root_cause: 'Missing timeout guard in checkout flow',
+                    fix: 'Added 5s timeout guard and retry logic'
+                },
+                'TCK-1002': {
+                    title: 'User authentication failing with rate limit errors',
+                    service: 'auth-api',
+                    repo: 'repo-auth',
+                    file: 'src/auth/login.py',
+                    error: 'LoginRateLimitError',
+                    impact: '15% login failures, user lockouts increasing',
+                    root_cause: 'Rate limiter blocking legitimate users due to aggressive thresholds',
+                    fix: 'Adjusted rate limiting thresholds and added IP whitelist'
+                },
+                'TCK-1003': {
+                    title: 'Refund processing stuck due to missing premium tier config',
+                    service: 'payments-api',
+                    repo: 'repo-payments',
+                    file: 'service/payment/limits.py',
+                    error: 'RefundLimitExceededError',
+                    impact: 'Premium users unable to process refunds, support tickets increasing',
+                    root_cause: 'Missing premium tier configuration in limits dictionary',
+                    fix: 'Added premium tier config and safe dictionary access'
+                }
+            };
+            return incidents[incidentId] || incidents['TCK-1001'];
         }
 
         // Initialize demo

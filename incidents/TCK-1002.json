@@ -1,0 +1,15 @@
+{
+  "id": "TCK-1002",
+  "title": "User authentication failing with rate limit errors",
+  "service": "auth-api",
+  "api_endpoint": "/v1/login",
+  "job_id": "job-992",
+  "workflow_id": "flow-23",
+  "request_id": "req_7c5d",
+  "session_id": "sess_22",
+  "version": "2025.09.14",
+  "created_at": "2025-09-14T09:15:22Z",
+  "resolved_at": null,
+  "impact": "15% login failures, user lockouts increasing",
+  "error_message": "LoginRateLimitError: too many attempts from IP"
+}

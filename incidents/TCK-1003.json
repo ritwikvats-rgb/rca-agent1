@@ -1,0 +1,15 @@
+{
+  "id": "TCK-1003",
+  "title": "Refund processing stuck due to missing premium tier config",
+  "service": "payments-api",
+  "api_endpoint": "/v1/refunds",
+  "job_id": "job-993",
+  "workflow_id": "flow-24",
+  "request_id": "req_8f2a",
+  "session_id": "sess_33",
+  "version": "2025.09.15",
+  "created_at": "2025-09-15T14:30:45Z",
+  "resolved_at": null,
+  "impact": "Premium users unable to process refunds, support tickets increasing",
+  "error_message": "RefundLimitExceededError: KeyError 'premium' tier not found"
+}
