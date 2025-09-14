@@ -28,13 +28,66 @@ def create_linear_ticket(ticket_data: TicketData) -> Dict[str, Any]:
         return create_mock_linear_ticket(ticket_data, config)
 
 
+def get_team_id(config: Dict[str, Optional[str]]) -> Optional[str]:
+    """Get team ID from team key using Linear API."""
+    url = "https://api.linear.app/graphql"
+    headers = {
+        "Authorization": config['api_key'],
+        "Content-Type": "application/json"
+    }
+    
+    # Query to get teams
+    query = """
+    query {
+      teams {
+        nodes {
+          id
+          key
+          name
+        }
+      }
+    }
+    """
+    
+    try:
+        response = requests.post(
+            url,
+            headers=headers,
+            json={"query": query},
+            timeout=30
+        )
+        response.raise_for_status()
+        
+        data = response.json()
+        teams = data.get('data', {}).get('teams', {}).get('nodes', [])
+        
+        # Find team by key
+        for team in teams:
+            if team['key'] == config['team_key']:
+                return team['id']
+        
+        return None
+    
+    except Exception:
+        return None
+
+
 def create_real_linear_ticket(ticket_data: TicketData, config: Dict[str, Optional[str]]) -> Dict[str, Any]:
     """Create a real Linear ticket using the API."""
     url = "https://api.linear.app/graphql"
     headers = {
-        "Authorization": f"Bearer {config['api_key']}",
+        "Authorization": config['api_key'],
         "Content-Type": "application/json"
     }
+    
+    # Get team ID from team key
+    team_id = get_team_id(config)
+    if not team_id:
+        return {
+            'success': False,
+            'error': f"Team '{config['team_key']}' not found. Check your LINEAR_TEAM_KEY.",
+            'type': 'real'
+        }
     
     # GraphQL mutation to create issue
     mutation = """
@@ -55,9 +108,8 @@ def create_real_linear_ticket(ticket_data: TicketData, config: Dict[str, Optiona
         "input": {
             "title": ticket_data.title,
             "description": ticket_data.description,
-            "teamId": config['team_key'],
-            "priority": ticket_data.priority,
-            "labelIds": []  # Would need to map label names to IDs
+            "teamId": team_id,
+            "priority": ticket_data.priority
         }
     }
     
