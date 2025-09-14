@@ -38,12 +38,13 @@ async def health():
 async def debug_env():
     """Debug endpoint to check environment variables"""
     linear_api_key = os.getenv("LINEAR_API_KEY")
+    linear_team_key = os.getenv("LINEAR_TEAM_KEY", "RIT")
+    
     return {
         "linear_api_key_present": bool(linear_api_key),
-        "linear_api_key_length": len(linear_api_key) if linear_api_key else 0,
-        "linear_api_key_prefix": linear_api_key[:10] + "..." if linear_api_key else None,
-        "all_env_vars": list(os.environ.keys()),
-        "vercel_env": os.getenv("VERCEL_ENV", "unknown")
+        "linear_team_key": linear_team_key,
+        "vercel_env": os.getenv("VERCEL_ENV", "unknown"),
+        "status": "healthy"
     }
 
 @app.get("/incidents")
