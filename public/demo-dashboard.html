@@ -575,7 +575,8 @@ Click any button above to see the RCA Agent in action!
         }
 
         function generateInitialRCAContent() {
-            return `# Initial RCA — TCK-1001: Checkout intermittently timing out
+            const incident = getIncidentData(currentIncident);
+            return `# Initial RCA — ${currentIncident}: ${incident.title}
 
 ## Summary
 Checkout flow experiencing 3% failure rate due to payment gateway timeouts exceeding 5 seconds without proper handling.
@@ -955,7 +956,7 @@ This is demonstration content. The actual RCA Agent generates comprehensive, rea
                         Modified: Just now<br>
                         Type: PDF
                     </div>
-                    <a href="#" class="artifact-download" onclick="downloadDemo('final_rca.pdf')">
+                    <a href="#" class="artifact-download" onclick="downloadDemo('${currentIncident}_final_rca.pdf')">
                         📥 Download
                     </a>
                 </div>
