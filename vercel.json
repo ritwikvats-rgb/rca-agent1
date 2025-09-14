@@ -8,9 +8,25 @@
     {
       "src": "api/index.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "api/debug.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "api/ticket.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
+    {
+      "src": "/api/debug/(.*)",
+      "dest": "/api/debug.py"
+    },
+    {
+      "src": "/api/ticket",
+      "dest": "/api/ticket.py"
+    },
     {
       "src": "/api/(.*)",
       "dest": "/api/index.py"
